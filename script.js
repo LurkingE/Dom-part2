@@ -141,3 +141,54 @@ function createMovieCard(title, genre) {
   //    The function's job is to build and return. Appending is the caller's job.
   return card
 }
+
+movieList.addEventListener("click", (event) => {
+    // 1. If the click was not on a BUTTON, return early
+    //    hint: event.target.tagName === "BUTTON"
+    if (event.target.tagName !== "BUTTON") {
+        return
+    } else {
+        // 2. Get the card the button lives in
+        //    hint: event.target.closest("li")
+        console.log("You clicked a button!")
+        const card = event.target.closest("li")
+
+        if (event.target.classList.contains("remove-btn")) {
+            // 3. Was it the remove button?
+            //    - Check: event.target.classList.contains("remove-btn")
+            //    - If yes: remove the card from the DOM entirely
+            //      hint: card.remove()
+            //    - // TODO: call updateCount() here — Phase 6
+            //    - // TODO: call applyFilter(currentFilter) here — Phase 6
+            card.remove()
+            //updateCount()
+            //applyFilter(currentFilter)
+        } else if (event.target.classList.contains("watch-btn")) {
+            // 4. Was it the watch button?
+            //    - Check: event.target.classList.contains("watch-btn")
+            //    - If yes: toggle the "watched" class on the card
+            //      hint: card.classList.toggle("watched")
+            //    - Update the button's textContent based on the new state:
+            //      if the card now has .watched → set button text to "Unmark Watched"
+            //      if it no longer has .watched → set button text to "Mark Watched"
+            //      hint: card.classList.contains("watched") returns true or false
+            //    - // TODO: call applyFilter(currentFilter) here — Phase 6
+            card.classList.toggle("watched")
+            console.log(card)
+            let watchBtn = card.querySelector(".watch-btn")
+            if (card.classList.contains("watched")) {
+                watchBtn.textContent = "Mark Unwatched"
+            } else {
+                watchBtn.textContent = "Mark Watched"
+            }
+            //applyFilter(currentFilter)
+        }
+    }
+})
+
+// Why do we attach the listener to #movie-list instead of to each button?
+// Answer: Because the buttons don't exist when the page first loads and there is potentially an unlimited number of them, 
+// so we use event delegation by attaching the listener to a parent element that does exist and can catch events from its children.
+//
+// What does event.target.closest("li") do?
+// Answer: It gets the closest ancestor element of the target that matches the argument.
