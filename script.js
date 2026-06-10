@@ -1,4 +1,3 @@
-
 const appTitle = document.getElementById("app-title")
 const movieCount = document.getElementById("movie-count")
 const movieForm = document.getElementById("movie-form")
@@ -83,4 +82,60 @@ movieForm.addEventListener("submit", (event) => {
   //    .reset() clears all inputs in the form at once — no need to blank them one by one
 
   // 6. Don't build cards yet — that's Phase 4
+  let newCard = createMovieCard(title, genre)
+  movieList.appendChild(newCard)
 })
+
+function createMovieCard(title, genre) {
+  // 1. Create the outer <li>
+  //    - give it the class "movie-card"
+  //    - use setAttribute to set data-genre to the genre value
+  const card = document.createElement('li')
+  card.classList.add("movie-card")
+  card.setAttribute("genre", genre)
+
+  // 2. Create a <div> for the info section — class "movie-info"
+  //    Inside it, create two <span> elements:
+  //    - one with class "movie-title" — set its textContent to title
+  //    - one with class "movie-genre" — set its textContent to genre (show "No genre" if empty)
+  //    Append both spans into the info div
+  const movieInfo = document.createElement('div')
+  movieInfo.classList.add("movie-info")
+
+  const movieTitle = document.createElement('span')
+  movieTitle.classList.add("movie-title")
+
+  const movieGenre = document.createElement('span')
+  movieGenre.classList.add("movie-genre")
+  movieGenre.textContent = "No genre"
+
+  movieInfo.appendChild(movieTitle)
+  movieInfo.appendChild(movieGenre)
+
+  // 3. Create a <div> for the buttons — class "movie-actions"
+  //    Inside it, create two <button> elements:
+  //    - one with class "watch-btn" — textContent "Mark Watched"
+  //    - one with class "remove-btn" — textContent "Remove"
+  //    Append both buttons into the actions div
+  const movieActions = document.createElement('div')
+  movieActions.classList.add("movie-actions")
+
+  const watchBtn = document.createElement('button')
+  watchBtn.classList.add("watch-btn")
+  watchBtn.textContent = "Mark Watched"
+
+  const removeBtn = document.createElement('button')
+  removeBtn.classList.add("remove-btn")
+  removeBtn.textContent = "Remove"
+
+  movieActions.appendChild(watchBtn)
+  movieActions.appendChild(removeBtn)
+
+  // 4. Append the info div and actions div into the <li>
+  card.appendChild(movieInfo)
+  card.appendChild(movieActions)
+
+  // 5. return the card — do NOT append it here
+  //    The function's job is to build and return. Appending is the caller's job.
+  return card
+}
