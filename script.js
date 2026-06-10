@@ -104,10 +104,12 @@ function createMovieCard(title, genre) {
 
   const movieTitle = document.createElement('span')
   movieTitle.classList.add("movie-title")
+  movieTitle.textContent = `Name: ${title}  `
+
 
   const movieGenre = document.createElement('span')
   movieGenre.classList.add("movie-genre")
-  movieGenre.textContent = "No genre"
+  movieGenre.textContent = `Genre: ${genre}  `
 
   movieInfo.appendChild(movieTitle)
   movieInfo.appendChild(movieGenre)
