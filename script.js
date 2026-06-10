@@ -1,17 +1,4 @@
-// Change the app title
-appTitle.textContent = "My Movie Watchlist"
 
-console.log("Count says:", movieCount.textContent)
-
-movieCount.textContent = "0 movies"
-
-movieCount.classList.add("active-filter")
-
-movieCount.classList.remove("active-filter")
-
-// .toggle() adds if missing, removes if present — one call does both
-movieCount.classList.toggle("active-filter")
-movieCount.classList.toggle("active-filter")
 const appTitle = document.getElementById("app-title")
 const movieCount = document.getElementById("movie-count")
 const movieForm = document.getElementById("movie-form")
