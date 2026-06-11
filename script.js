@@ -12,12 +12,12 @@ const clearWatchedBtn = document.getElementById("clear-watched-btn")
 // select #movie-list        → store in movieList
 // select #clear-watched-btn → store in clearWatchedBtn
 
-console.log(appTitle)
-console.log(movieCount)
-console.log(movieForm)
-console.log(genreInput)
-console.log(movieList)
-console.log(clearWatchedBtn)
+// console.log(appTitle)
+// console.log(movieCount)
+// console.log(movieForm)
+// console.log(genreInput)
+// console.log(movieList)
+// console.log(clearWatchedBtn)
 
 // select ALL elements with class "filter-btn" using querySelectorAll
 // store them in filterBtns — you'll loop over them in Phase 6
@@ -62,7 +62,42 @@ titleInput.setAttribute("required", "")  // put it back
 titleInput.getAttribute("value")  // → null (the HTML never had a value attribute)
 titleInput.value                  // → whatever you just typed
 
+let movieStorage = []
 let currentFilter = "all"
+
+function saveMovies() {
+    // Turn movieStorage array into a string so it can be saved into localStorage
+    localStorage.setItem("movies", JSON.stringify(movieStorage))
+    console.log("Saved movies:", JSON.parse(localStorage.getItem("movies")))
+}
+
+function loadMovies() {
+    // 1. Get saved data from localStorage if saved data exists, turn it back into an array
+    // 2. Initiaize the movie cards
+    const savedMovies = localStorage.getItem("movies")
+    if (savedMovies) {
+        // console.log("Saved movies:", savedMovies)
+        // Converts movies stored in local storage into an array of movie objects.
+        movieStorage = JSON.parse(savedMovies)
+        for (let i = 0; i < movieStorage.length; i++) {
+            const movie = movieStorage[i]
+            // If anything is missing at a later date fix it.
+            fixMissingValues(movie)
+            let newCard = createMovieCard(movie)
+            movieList.appendChild(newCard)
+        }
+        updateCount()
+    }
+}
+
+function fixMissingValues(movie) {
+    // If a movie is missing an ID give it one.
+    if (!movie.id) {
+        movie.id = crypto.randomUUID()
+    }
+}
+
+loadMovies()
 
 movieForm.addEventListener("submit", (event) => {
   // 1. Stop the browser from reloading the page
@@ -71,32 +106,40 @@ movieForm.addEventListener("submit", (event) => {
 
   // 2. Read the movie title from the input — use .value, not getAttribute
   const title = titleInput.value
- 
   // 3. Read the genre the same way
   const genre = genreInput.value
 
+  const newMovie = {}
+  newMovie.title = title
+  newMovie.genre = genre
+  newMovie.watched = false // Default to false since its a new movie
+  newMovie.id = crypto.randomUUID() // Generate a unique ID for tracking each instance
+
   // 4. Log both values to the console
   //    Type a title and genre, submit — confirm you see them in DevTools
-  console.log(title)
-  console.log(genre)
+  console.log("Adding new movie:", newMovie)
+  // console.log(title)
+  // console.log(genre)
 
   // 5. At the end, reset the form so the inputs are blank for the next entry
-  movieForm.reset()
   //    .reset() clears all inputs in the form at once — no need to blank them one by one
+  movieForm.reset()
 
   // 6. Don't build cards yet — that's Phase 4
-  let newCard = createMovieCard(title, genre)
+  let newCard = createMovieCard(newMovie)
   movieList.appendChild(newCard)
+  movieStorage.push(newMovie)
   updateCount()
 })
 
-function createMovieCard(title, genre) {
+function createMovieCard(movieObj) {
   // 1. Create the outer <li>
   //    - give it the class "movie-card"
   //    - use setAttribute to set data-genre to the genre value
   const card = document.createElement('li')
   card.classList.add("movie-card")
-  card.setAttribute("genre", genre)
+  card.setAttribute("genre", movieObj.genre)
+  card.setAttribute("id", movieObj.id)
 
   // 2. Create a <div> for the info section — class "movie-info"
   //    Inside it, create two <span> elements:
@@ -108,15 +151,30 @@ function createMovieCard(title, genre) {
 
   const movieTitle = document.createElement('span')
   movieTitle.classList.add("movie-title")
-  movieTitle.textContent = `Name: ${title}  `
+  movieTitle.textContent = `Name: ${movieObj.title}  `
 
+  const editTitleInput = document.createElement("input")
+  editTitleInput.classList.add("movie-edit-title")
+  editTitleInput.classList.add("hide")
+  editTitleInput.setAttribute("required", "")
+
+  const divider = document.createElement('span')
+  divider.textContent = " -- "
 
   const movieGenre = document.createElement('span')
   movieGenre.classList.add("movie-genre")
-  movieGenre.textContent = `Genre: ${genre}  `
+  movieGenre.textContent = `Genre: ${movieObj.genre}  `
+
+  const editGenreInput = document.createElement("input")
+  editGenreInput.classList.add("movie-edit-genre")
+  editGenreInput.classList.add("hide")
+  editGenreInput.setAttribute("required", "")
 
   movieInfo.appendChild(movieTitle)
+  movieInfo.appendChild(editTitleInput)
+  movieInfo.appendChild(divider)
   movieInfo.appendChild(movieGenre)
+  movieInfo.appendChild(editGenreInput)
 
   // 3. Create a <div> for the buttons — class "movie-actions"
   //    Inside it, create two <button> elements:
@@ -126,6 +184,10 @@ function createMovieCard(title, genre) {
   const movieActions = document.createElement('div')
   movieActions.classList.add("movie-actions")
 
+  const editBtn = document.createElement('button')
+  editBtn.classList.add("edit-btn")
+  editBtn.textContent = "Edit"
+
   const watchBtn = document.createElement('button')
   watchBtn.classList.add("watch-btn")
   watchBtn.textContent = "Mark Watched"
@@ -134,6 +196,7 @@ function createMovieCard(title, genre) {
   removeBtn.classList.add("remove-btn")
   removeBtn.textContent = "Remove"
 
+  movieActions.appendChild(editBtn)
   movieActions.appendChild(watchBtn)
   movieActions.appendChild(removeBtn)
 
@@ -146,6 +209,56 @@ function createMovieCard(title, genre) {
   return card
 }
 
+function editMovie(card) {
+    let titleLabel = card.querySelector(".movie-title")
+    let genreLabel = card.querySelector(".movie-genre")
+    let editTitleInput = card.querySelector(".movie-edit-title")
+    let editGenreInput = card.querySelector(".movie-edit-genre")
+    let button = card.querySelector(".edit-btn")
+
+    if (!card.classList.contains("edit-mode")) {
+        // Begin editing card by revealing input fields.
+        card.classList.add("edit-mode")
+
+        // Fill input fields with old values as default for editing.
+        const currentTitle = titleLabel.textContent.replace("Name: ","").trim()
+        const currentGenre = genreLabel.textContent.replace("Genre: ","").trim()
+        editTitleInput.value = currentTitle
+        editGenreInput.value = currentGenre
+
+        // Rename button and reveal inputs
+        editTitleInput.classList.remove("hide")
+        editGenreInput.classList.remove("hide")
+        titleLabel.textContent = "Name: "
+        genreLabel.textContent = "Genre: "
+        button.textContent = "Save"
+    } else {
+        // Begin saving new values and returning card back to default.
+        // Return early if inputs are blank.
+        if (editTitleInput.value.trim() === "") {
+            editTitleInput.reportValidity()
+            return
+        }
+        if (editGenreInput.value.trim() === "") {
+            editGenreInput.reportValidity()
+            return
+        }
+        
+        // Update new values into the title
+        const newTitle = editTitleInput.value
+        const newGenre = editGenreInput.value
+        titleLabel.textContent = `Name: ${newTitle}  `
+        genreLabel.textContent = `Genre: ${newGenre}  `
+
+        // Rename button and hide inputs
+        card.classList.remove("edit-mode")
+        button.textContent = "Edit"
+        editTitleInput.classList.add("hide")
+        editGenreInput.classList.add("hide")
+    }
+}
+
+// Click event for when buttons for the movie cards are clicked
 movieList.addEventListener("click", (event) => {
     // 1. If the click was not on a BUTTON, return early
     //    hint: event.target.tagName === "BUTTON"
@@ -164,9 +277,13 @@ movieList.addEventListener("click", (event) => {
             //      hint: card.remove()
             //    - // TODO: call updateCount() here — Phase 6
             //    - // TODO: call applyFilter(currentFilter) here — Phase 6
+
+            // Removes movie from storage by filtering out by its ID.
+            console.log("Removing movie with ID:", card.getAttribute("id"))
+            movieStorage = movieStorage.filter((obj) => obj.id !== card.getAttribute("id"))
             card.remove()
-            updateCount()
             applyFilter(currentFilter)
+            updateCount()
         } else if (event.target.classList.contains("watch-btn")) {
             // 4. Was it the watch button?
             //    - Check: event.target.classList.contains("watch-btn")
@@ -178,14 +295,15 @@ movieList.addEventListener("click", (event) => {
             //      hint: card.classList.contains("watched") returns true or false
             //    - // TODO: call applyFilter(currentFilter) here — Phase 6
             card.classList.toggle("watched")
-            console.log(card)
             let watchBtn = card.querySelector(".watch-btn")
-            if (card.classList.contains("watched")) {
-                watchBtn.textContent = "Mark Unwatched"
-            } else {
-                watchBtn.textContent = "Mark Watched"
-            }
-            //applyFilter(currentFilter)
+            const watchedStatus = card.classList.contains("watched")
+
+            // Compact conditional statement to update button text.
+            watchBtn.textContent = watchedStatus ? "Mark Unwatched" : "Mark Watched"
+            applyFilter(currentFilter)
+        } else if (event.target.classList.contains("edit-btn")) {
+            console.log(card)
+            editMovie(card)
         }
     }
     // Why do we attach the listener to #movie-list instead of to each button?
@@ -208,7 +326,7 @@ function updateCount() {
   } else {
     movieCount.textContent = movieNum + " movies"
   }
-
+  saveMovies()
 }
 
 function updateFilterButtons(activeFilter) {
@@ -261,7 +379,6 @@ function applyFilter(filter) {
             card.classList.remove("filtered-out")
         }
     }
-
   }
 }
 
